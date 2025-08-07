@@ -29,24 +29,24 @@ export default function InfluencersPage() {
     mutationFn: async (category: string) => {
       const response = await apiRequest("POST", "/api/discover-influencers", { 
         category, 
-        count: 30 
+        count: 50 
       });
       return response.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Discovery started!",
-        description: `Finding influencers from YouTube...`,
+        description: `Finding ${data.category || 'new'} influencers from YouTube...`,
       });
-      // Refetch influencers after a short delay
+      // Refetch influencers after a short delay to show new results
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/influencers"] });
-      }, 3000);
+      }, 2000);
     },
     onError: (error) => {
       toast({
         title: "Discovery failed",
-        description: "Failed to start influencer discovery. Please try again.",
+        description: "Unable to discover new influencers. Please check your API quota and try again.",
         variant: "destructive",
       });
     },
@@ -63,6 +63,7 @@ export default function InfluencersPage() {
   };
 
   const handleDiscoverInfluencers = (category: string) => {
+    if (discoverMutation.isPending) return;
     discoverMutation.mutate(category);
   };
 
@@ -134,24 +135,27 @@ export default function InfluencersPage() {
                   size="sm"
                   className="bg-blue-600 hover:bg-blue-700"
                   data-testid="button-discover-tech"
+                  disabled={discoverMutation.isPending}
                 >
-                  Discover Tech
+                  {discoverMutation.isPending ? "Discovering..." : "Discover Tech"}
                 </Button>
                 <Button
                   onClick={() => handleDiscoverInfluencers("beauty")}
                   size="sm"
                   className="bg-pink-600 hover:bg-pink-700"
                   data-testid="button-discover-beauty"
+                  disabled={discoverMutation.isPending}
                 >
-                  Discover Beauty
+                  {discoverMutation.isPending ? "Discovering..." : "Discover Beauty"}
                 </Button>
                 <Button
                   onClick={() => handleDiscoverInfluencers("fitness")}
                   size="sm"
                   className="bg-green-600 hover:bg-green-700"
                   data-testid="button-discover-fitness"
+                  disabled={discoverMutation.isPending}
                 >
-                  Discover Fitness
+                  {discoverMutation.isPending ? "Discovering..." : "Discover Fitness"}
                 </Button>
               </div>
             </div>

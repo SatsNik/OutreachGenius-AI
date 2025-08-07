@@ -1,6 +1,10 @@
 import { storage } from "../storage";
 
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || "AIzaSyB0GgwIGdhR78j74vCtBKEomTEqukjQ2s4";
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+
+if (!YOUTUBE_API_KEY) {
+  throw new Error("YOUTUBE_API_KEY environment variable is required");
+}
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
 interface YouTubeChannel {
@@ -41,11 +45,13 @@ interface YouTubeSearchResult {
 export async function searchYouTubeInfluencers(query: string, maxResults: number = 50): Promise<any[]> {
   try {
     // Search for channels
-    const searchUrl = `${YOUTUBE_API_BASE}/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${YOUTUBE_API_KEY}`;
+    const searchUrl = `${YOUTUBE_API_BASE}/search?part=snippet&type=channel&q=${encodeURIComponent(query)}&maxResults=${Math.min(maxResults, 25)}&key=${YOUTUBE_API_KEY}`;
     
     const searchResponse = await fetch(searchUrl);
     if (!searchResponse.ok) {
-      throw new Error(`YouTube API error: ${searchResponse.status}`);
+      const errorText = await searchResponse.text();
+      console.error(`YouTube API error ${searchResponse.status}:`, errorText);
+      throw new Error(`YouTube API error: ${searchResponse.status} - ${errorText}`);
     }
     
     const searchData = await searchResponse.json();

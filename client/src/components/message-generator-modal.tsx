@@ -330,8 +330,17 @@ export default function MessageGeneratorModal({ isOpen, onClose, influencer }: M
               {/* Custom Email Input */}
               {(useCustomEmailInput || !influencer.email) && (
                 <div data-testid="section-custom-email">
+                  {!influencer.email && (
+                    <div className="flex items-center space-x-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium">Contact Unavailable</p>
+                        <p className="text-xs text-amber-600">No email found for this influencer. Please provide one below.</p>
+                      </div>
+                    </div>
+                  )}
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Influencer Email Address
+                    {influencer.email ? "Alternative Email Address" : "Influencer Email Address *"}
                   </label>
                   <div className="flex space-x-2">
                     <Input
@@ -341,6 +350,7 @@ export default function MessageGeneratorModal({ isOpen, onClose, influencer }: M
                       placeholder="influencer@example.com"
                       className="flex-1"
                       data-testid="input-custom-email"
+                      required={!influencer.email}
                     />
                     <Button
                       onClick={() => {
@@ -365,7 +375,7 @@ export default function MessageGeneratorModal({ isOpen, onClose, influencer }: M
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    We'll send the outreach message to this email address
+                    {influencer.email ? "Alternative email will be used instead" : "The outreach message will be sent to this email address"}
                   </p>
                 </div>
               )}
