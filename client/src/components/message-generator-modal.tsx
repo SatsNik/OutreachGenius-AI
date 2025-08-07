@@ -163,7 +163,7 @@ export default function MessageGeneratorModal({ isOpen, onClose, influencer }: M
     }
   };
 
-  const canSendMessage = generatedMessage && (influencer.email || customEmail);
+  const canSendMessage = generatedMessage && !isGenerating && (influencer.email || customEmail.trim());
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

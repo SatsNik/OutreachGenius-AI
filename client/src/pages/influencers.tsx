@@ -1,6 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Zap, Bell, User, Youtube } from "lucide-react";
@@ -15,8 +17,39 @@ export default function InfluencersPage() {
   const [followersFilter, setFollowersFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: influencers, isLoading, error } = useQuery<Influencer[]>({
     queryKey: ["/api/influencers"],
+  });
+
+  // Discovery mutation
+  const discoverMutation = useMutation({
+    mutationFn: async (category: string) => {
+      const response = await apiRequest("POST", "/api/discover-influencers", { 
+        category, 
+        count: 30 
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Discovery started!",
+        description: `Finding influencers from YouTube...`,
+      });
+      // Refetch influencers after a short delay
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/influencers"] });
+      }, 3000);
+    },
+    onError: (error) => {
+      toast({
+        title: "Discovery failed",
+        description: "Failed to start influencer discovery. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleConnect = (influencer: Influencer) => {
@@ -27,6 +60,10 @@ export default function InfluencersPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedInfluencer(null);
+  };
+
+  const handleDiscoverInfluencers = (category: string) => {
+    discoverMutation.mutate(category);
   };
 
   const filteredInfluencers = influencers?.filter((influencer) => {
@@ -82,6 +119,44 @@ export default function InfluencersPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Discovered Influencers</h2>
           <p className="text-gray-600">Connect with influencers and generate personalized outreach messages using AI</p>
         </div>
+
+        {/* Discovery Section */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Discover More Influencers</h3>
+                <p className="text-sm text-gray-600">Find influencers from YouTube using our AI-powered discovery</p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => handleDiscoverInfluencers("tech")}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-discover-tech"
+                >
+                  Discover Tech
+                </Button>
+                <Button
+                  onClick={() => handleDiscoverInfluencers("beauty")}
+                  size="sm"
+                  className="bg-pink-600 hover:bg-pink-700"
+                  data-testid="button-discover-beauty"
+                >
+                  Discover Beauty
+                </Button>
+                <Button
+                  onClick={() => handleDiscoverInfluencers("fitness")}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="button-discover-fitness"
+                >
+                  Discover Fitness
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Filters */}
         <Card className="mb-6">

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { generateOutreachMessage, generateSubjectLine } from "./services/gemini";
 import { sendEmail } from "./services/sendgrid";
+import { discoverInfluencersByCategory, searchYouTubeInfluencers } from "./services/youtube";
 import { insertOutreachMessageSchema } from "@shared/schema";
 
 // Validation schemas
@@ -211,6 +212,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating test user:", error);
       res.status(500).json({ error: "Failed to create test user" });
+    }
+  });
+
+  // Discover influencers from YouTube
+  app.post("/api/discover-influencers", async (req, res) => {
+    try {
+      const { category, count = 50 } = req.body;
+      
+      if (!category) {
+        return res.status(400).json({ error: "Category is required" });
+      }
+      
+      await discoverInfluencersByCategory(category, count);
+      
+      res.json({ 
+        success: true, 
+        message: `Started discovering ${count} ${category} influencers from YouTube` 
+      });
+    } catch (error) {
+      console.error("Error discovering influencers:", error);
+      res.status(500).json({ error: "Failed to discover influencers" });
+    }
+  });
+
+  // Search specific YouTube influencers
+  app.post("/api/search-youtube", async (req, res) => {
+    try {
+      const { query, maxResults = 20 } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+      
+      const influencers = await searchYouTubeInfluencers(query, maxResults);
+      
+      // Save discovered influencers to database
+      const saved = [];
+      for (const influencerData of influencers) {
+        try {
+          const existingInfluencers = await storage.getInfluencers();
+          const exists = existingInfluencers.some(existing => 
+            existing.channelId === influencerData.channelId || existing.name === influencerData.name
+          );
+          
+          if (!exists) {
+            const savedInfluencer = await storage.createInfluencer(influencerData);
+            saved.push(savedInfluencer);
+          }
+        } catch (error) {
+          console.error(`Error saving influencer ${influencerData.name}:`, error);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Found and saved ${saved.length} new influencers`,
+        influencers: saved
+      });
+    } catch (error) {
+      console.error("Error searching YouTube:", error);
+      res.status(500).json({ error: "Failed to search YouTube influencers" });
     }
   });
 
