@@ -1,10 +1,10 @@
-# OutreachGenius - AI-Powered Influencer Outreach Platform
+# OutreachGenius ICY - AI-Powered Influencer Outreach Platform
 
 > Streamline influencer marketing with AI-generated personalized outreach messages and automated discovery
 
 ## 🚀 Overview
 
-OutreachGenius is an intelligent influencer marketing platform that revolutionizes how brands connect with influencers. Using advanced AI technology, it automatically discovers influencers from YouTube, analyzes their content for brand alignment, and generates highly personalized outreach messages that convert.
+ICY is an intelligent influencer marketing platform that revolutionizes how brands connect with influencers. Using advanced AI technology, it automatically discovers influencers from YouTube, analyzes their content for brand alignment, and generates highly personalized outreach messages that convert.
 
 ## ✨ Key Features
 
